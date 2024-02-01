@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Flight } from '../types/flight';
+import { TableRow, TableCell } from '@mui/material';
 
 /**
  * The FlightItem component is a React functional component designed to display detailed 
@@ -8,25 +9,23 @@ import { Flight } from '../types/flight';
  */
 
 const FlightItem = ({ flight }: { flight: Flight }) => {
-  const [statusStyle, setStatusStyle] = useState({});
+  const [rowStyle, setRowStyle] = useState({});
 
   useEffect(() => {
-    // Set the background color based on the flight status
-    const bgColor = flight.status === 'malfunction' ? 'red' : 'white';
-    setStatusStyle({ backgroundColor: bgColor });
-  }, [flight.status]); // Depend on flight.status
+    const bgColor = flight.status === 'malfunction' ? '#ffcccb' : 'inherit'; // Light red for malfunction, inherit for others
+    setRowStyle({ backgroundColor: bgColor });
+  }, [flight.status]); // Update when flight.status changes
 
   return (
-    <div style={statusStyle}>
-      <div>{flight.flightNumber}</div>
-      <div>{flight.status}</div>
-      <div>{flight.takeoffTime}</div>
-      <div>{flight.landingTime}</div>
-      <div>{flight.takeoffAirport}</div>
-      <div>{flight.landingAirport}</div>
-    </div>
+    <TableRow style={rowStyle} sx={{ height: '60px' }}>
+      <TableCell align="center">{flight.flightNumber}</TableCell>
+      <TableCell align="center">{flight.status}</TableCell>
+      <TableCell align="center">{flight.takeoffTime}</TableCell>
+      <TableCell align="center">{flight.landingTime}</TableCell>
+      <TableCell align="center">{flight.takeoffAirport}</TableCell>
+      <TableCell align="center">{flight.landingAirport}</TableCell>
+    </TableRow>
   );
 };
 
 export default FlightItem;
-

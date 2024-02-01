@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { flightStore } from '../stores/FlightStore';
+import { TextField } from '@mui/material';
 
 /**
  * The SearchBar component is responsible for rendering a search input field. 
@@ -16,13 +17,18 @@ const SearchBar = () => {
   };
 
   return (
-    <input
+    <TextField
       type="text"
       placeholder="Search flights..."
       value={searchTerm}
       onChange={handleSearch}
+      fullWidth
+      label="Search Flights"
+      variant="outlined"
+      sx={{ mb: 2 }}
     />
   );
 };
 
 export default SearchBar;
+
