@@ -1,7 +1,10 @@
 import React from 'react';
 import { observer } from 'mobx-react';
 import { flightStore } from '../stores/FlightStore';
-import FlightItem from './FlightItem';
+
+import dynamic from 'next/dynamic';
+
+const FlightItem = dynamic(() => import('./FlightItem'), { ssr: false });
 
 /**
  * The FlightList component is a functional component that uses the observer function 
@@ -11,7 +14,7 @@ import FlightItem from './FlightItem';
 
 const FlightList = observer(() => (
   <div>
-    {flightStore.flights.map(flight => (
+    {flightStore.visibleFlights.map(flight => (
       <FlightItem key={flight.flightNumber} flight={flight} />
     ))}
   </div>
