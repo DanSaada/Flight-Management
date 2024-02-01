@@ -2,6 +2,12 @@ import { makeAutoObservable, runInAction } from 'mobx';
 import io from 'socket.io-client';
 import { Flight } from '../types/flight';
 
+/**
+ * The FlightStore class is a MobX store used to manage and store flight-related data in a 
+ * React application. It maintains a list of flights, filters flights based on a search term, 
+ * and updates flight data in response to real-time events via a WebSocket connection.
+ */
+
 class FlightStore {
   flights: Flight[] = [];
   filteredFlights: Flight[] = [];
