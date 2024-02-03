@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Flight } from '../types/flight';
+import { observer } from 'mobx-react-lite'; // Import observer from mobx-react-lite
+import { Flight } from '../types/Interfaces';
 import { TableRow, TableCell, Typography, Tooltip } from '@mui/material';
 import { getFlightItemStyle, textCellStyle, getStatusStyle } from '../styles/CommonStyle';
+import { flightStore } from '../stores/FlightStore'; // Assuming this is your store
 
 /**
  * The FlightItem component is a React functional component designed to display detailed 
@@ -9,28 +11,30 @@ import { getFlightItemStyle, textCellStyle, getStatusStyle } from '../styles/Com
  * scheduled takeoff and landing times, and the airports of departure and arrival.
  */
 
-const FlightItem = ({ flight, index }: { flight: Flight, index: number }) => {
+const FlightItem = observer(({ flight, index }: { flight: Flight, index: number }) => {
   const [takeoffDelay, setTakeoffDelay] = useState<number | null>(null);
   const [landingDelay, setLandingDelay] = useState<number | null>(null);
 
   useEffect(() => {
-    // Calculate and update takeoff delay only if previous takeoff time is available
-    if (flight.previousTakeoffTime) {
-      const newTakeoffDelay = flight.takeoffDelay;
-      setTakeoffDelay(newTakeoffDelay);
-    }
-  }, [flight.takeoffDelay]);
-
-  useEffect(() => {
-    // Calculate and update landing delay only if previous landing time is available
-    if (flight.previousLandingTime) {
-      const newLandingDelay = flight.landingDelay;
-      setLandingDelay(newLandingDelay);
-    }
-  }, [flight.landingDelay]);
+    // Check if there's an entry for the current flight in the delayTimes hashmap
+    const flightDelayInfo = flightStore.delayTimes[flight.flightNumber];
+    
+    // Safely access takeoffDelay, defaulting to 0 if not present
+    const newTakeoffDelay = flightDelayInfo ? flightDelayInfo.takeoffDelay : 0;
+    setTakeoffDelay(newTakeoffDelay);
+  }, [flight.flightNumber, flight.takeoffDelay]);
   
 
-  // Function to render delay cell
+useEffect(() => {
+  // Check if there's an entry for the current flight in the delayTimes hashmap
+  const flightDelayInfo = flightStore.delayTimes[flight.flightNumber];
+  
+  // Safely access landingDelay, defaulting to 0 if not present
+  const newLandingDelay = flightDelayInfo ? flightDelayInfo.landingDelay : 0;
+  setLandingDelay(newLandingDelay);
+}, [flight.flightNumber, flight.landingDelay]);
+
+
   const renderDelayCell = (delay: number) => {
     return delay > 0 ? (
       <Tooltip title={`Delayed by ${delay} minutes`}>
@@ -50,13 +54,13 @@ const FlightItem = ({ flight, index }: { flight: Flight, index: number }) => {
       <TableCell sx={text}><Typography>{flight.flightNumber}</Typography></TableCell>
       <TableCell align="center" sx={statusStyle}>{flight.status}</TableCell>
       <TableCell sx={text}>{flight.takeoffTime}</TableCell>
-      <TableCell sx={text}>{renderDelayCell(takeoffDelay ? takeoffDelay : 0)}</TableCell>
+      <TableCell sx={text}>{renderDelayCell(takeoffDelay? takeoffDelay:0)}</TableCell>
       <TableCell sx={text}>{flight.landingTime}</TableCell>
-      <TableCell sx={text}>{renderDelayCell(landingDelay ? landingDelay : 0)}</TableCell>
+      <TableCell sx={text}>{renderDelayCell(landingDelay? landingDelay:0)}</TableCell>
       <TableCell sx={text}>{flight.takeoffAirport}</TableCell>
       <TableCell sx={text}>{flight.landingAirport}</TableCell>
     </TableRow>
   );
-};
+});
 
 export default FlightItem;

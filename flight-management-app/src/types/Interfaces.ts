@@ -12,4 +12,9 @@ export interface Flight {
     takeoffDelay: number;
     landingDelay: number;
 }
+
+export interface DelayTimes {
+      takeoffDelay: number;
+      landingDelay: number;
+  }
   

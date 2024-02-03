@@ -1,8 +1,9 @@
 import { makeAutoObservable, runInAction } from 'mobx';
 import io from 'socket.io-client';
-import { Flight } from '../types/flight';
+import { Flight, DelayTimes} from '../types/Interfaces';
 import { fetchAllFlights, fetchFlightByNumber } from '../services/Api';
 import moment from 'moment';
+import { set } from 'mobx';
 
 /**
  * The FlightStore class is a MobX store used to manage and store flight-related data in a 
@@ -10,145 +11,157 @@ import moment from 'moment';
  * and updates flight data in response to real-time events via a WebSocket connection.
  */
 
-// class FlightStore {
-//   flights: Flight[] = [];
-//   filteredFlights: Flight[] = [];
-//   currentSearchTerm: string = '';
-//   initialLoadComplete: boolean = false;
-
-//   constructor() {
-//     makeAutoObservable(this);
-//     this.setupSocket();
-//     this.loadAllFlights(); // Fetch all flights upon store initialization
-//   }
-
-//     // Function to calculate delay in minutes
-//     calculateDelay = (current: string, previous?: string) => {
-//         const currentTime = moment(current, "DD/MM/YYYY - HH:mm");
-//         const previousTime = moment(previous || current, "DD/MM/YYYY - HH:mm");
-//         return currentTime.diff(previousTime, 'minutes');
-//     };
-
-//   setupSocket() {
-//     const socket = io('http://localhost:4963');
-//     socket.on('flight-update', (flightUpdate: Partial<Flight>) => {
-//       runInAction(() => {
-//         const index = this.flights.findIndex(f => f.flightNumber === flightUpdate.flightNumber);
-//         if (index > -1) {
-//             const currentFlight = this.flights[index];
-//             // Update previous times only if they are different
-//             if (flightUpdate.takeoffTime && (flightUpdate.takeoffTime !== currentFlight.takeoffTime) && (flightUpdate.flightNumber === currentFlight.flightNumber)) {
-//                 console.log(flightUpdate.flightNumber)
-//                 flightUpdate.previousTakeoffTime = currentFlight.takeoffTime;
-//                 console.log("current: " + flightUpdate.takeoffTime)
-//                 console.log("prev: " + flightUpdate.previousTakeoffTime)
-//                 flightUpdate.takeoffDelay = this.calculateDelay(flightUpdate.takeoffTime, flightUpdate.previousTakeoffTime);
-//                 console.log(flightUpdate.takeoffDelay)
-//             }
-//             if (flightUpdate.landingTime && (flightUpdate.landingTime !== currentFlight.landingTime) && (flightUpdate.flightNumber === currentFlight.flightNumber)) {
-//               flightUpdate.previousLandingTime = currentFlight.landingTime;
-//               flightUpdate.landingDelay = this.calculateDelay(flightUpdate.landingTime, flightUpdate.previousLandingTime)
-//             }
-//             // Now apply any other updates that might be there
-//             this.flights[index] = { ...currentFlight, ...flightUpdate };
-//             console.log("--------------------------------")
-//             console.log(this.flights[index].flightNumber)
-//             console.log(this.flights[index].previousTakeoffTime)
-//             console.log(this.flights[index].takeoffTime)
-//             console.log("--------------------------------")
-//         } else {
-//             const newFlight: Flight = {
-//                 ...flightUpdate as Flight,
-//                 previousTakeoffTime: flightUpdate.takeoffTime || '',
-//                 previousLandingTime: flightUpdate.landingTime || '',
-//                 takeoffDelay: 0,
-//                 landingDelay: 0,
-//               };
-//           this.flights.push(flightUpdate as Flight);
-//         }
-//         // Reapply the filter whenever the flights data is updated
-//         this.filterFlights(this.currentSearchTerm);
-//       });
-//     });
-//   }
-
-
 class FlightStore {
   flights: Flight[] = [];
   filteredFlights: Flight[] = [];
   currentSearchTerm: string = '';
   initialLoadComplete: boolean = false;
-  updateBuffer: Partial<Flight>[] = []; // Buffer for incoming updates
-  debounceTimer: any = null; // Timer for debouncing
-  debounceDelay: number = 300; // Delay in milliseconds
+  delayTimes: Record<string, DelayTimes> = {}; // Maps flight numbers to delay times in minutes
 
   constructor() {
     makeAutoObservable(this);
-    this.setupSocket();
+    
     this.loadAllFlights(); // Fetch all flights upon store initialization
+    this.setupSocket();
   }
 
-  setupSocket() {
-    const socket = io('http://localhost:4963');
-    socket.on('flight-update', (flightUpdate: Partial<Flight>) => {
-      // Accumulate updates in the buffer
-      this.updateBuffer.push(flightUpdate);
-      
-      // Clear the existing timer and restart the debounce timer
-      clearTimeout(this.debounceTimer);
-      this.debounceTimer = setTimeout(() => {
-        runInAction(() => {
-          this.processUpdates(); // Process all updates in the buffer
-        });
-      }, this.debounceDelay);
-    });
-  }
-
-      // Function to calculate delay in minutes
-  calculateDelay = (current: string, previous?: string) => {
+    // Function to calculate delay in minutes
+    calculateDelay = (current: string, previous?: string, flightNumber?: string, flag?: boolean) => {
       const currentTime = moment(current, "DD/MM/YYYY - HH:mm");
       const previousTime = moment(previous || current, "DD/MM/YYYY - HH:mm");
-      return currentTime.diff(previousTime, 'minutes');
-  };
-
-  processUpdates() {
-    // Process all accumulated updates in the buffer
-    this.updateBuffer.forEach((flightUpdate) => {
-      const index = this.flights.findIndex(f => f.flightNumber === flightUpdate.flightNumber);
-      if (index > -1) {
-        const currentFlight = this.flights[index];
-        // Update previous times only if they are different
-        if (flightUpdate.takeoffTime && (flightUpdate.takeoffTime !== currentFlight.takeoffTime) && (flightUpdate.flightNumber === currentFlight.flightNumber)) {
-            console.log(flightUpdate.flightNumber)
-            flightUpdate.previousTakeoffTime = currentFlight.takeoffTime;
-            console.log("current: " + flightUpdate.takeoffTime)
-            console.log("prev: " + flightUpdate.previousTakeoffTime)
-            flightUpdate.takeoffDelay = this.calculateDelay(flightUpdate.takeoffTime, flightUpdate.previousTakeoffTime);
-            console.log(flightUpdate.takeoffDelay)
+      const delay = currentTime.diff(previousTime, 'minutes');
+      if (delay >= 120) {
+        this.initialLoadComplete = false;
+        this.loadAllFlights();
+      } else if (flightNumber) {
+        // Check if the flightNumber entry exists, if not, initialize it properly
+        if (!this.delayTimes[flightNumber]) {
+          // Use MobX's `set` to ensure the addition is observable
+          set(this.delayTimes, flightNumber, { takeoffDelay: 0, landingDelay: 0 });
         }
-        if (flightUpdate.landingTime && (flightUpdate.landingTime !== currentFlight.landingTime) && (flightUpdate.flightNumber === currentFlight.flightNumber)) {
-          flightUpdate.previousLandingTime = currentFlight.landingTime;
-          flightUpdate.landingDelay = this.calculateDelay(flightUpdate.landingTime, flightUpdate.previousLandingTime)
+    
+        // Now it's safe to update since the object definitely exists
+        // And use `set` again if modifying the properties to ensure changes are tracked
+        if (flag) {
+          set(this.delayTimes[flightNumber], 'takeoffDelay', delay);
+        } else {
+          set(this.delayTimes[flightNumber], 'landingDelay', delay);
         }
-        // Now apply any other updates that might be there
-        this.flights[index] = { ...currentFlight, ...flightUpdate };
-        console.log("--------------------------------")
-        console.log(this.flights[index].flightNumber)
-        console.log(this.flights[index].previousTakeoffTime)
-        console.log(this.flights[index].takeoffTime)
-        console.log("--------------------------------")
-      } else {
-        // Handle new flights, if applicable
-        this.flights.push(flightUpdate as Flight);
       }
+    };
+    
+    
+
+  // async setupSocket() {
+  //   const socket = io('http://localhost:4963');
+  //   socket.on('flight-update', (flightUpdate: Partial<Flight>) => {
+  //     runInAction(() => {
+  //       const index = this.flights.findIndex(f => f.flightNumber === flightUpdate.flightNumber);
+  //       if (index > -1) {
+  //         const currentFlight = this.flights[index];
+          
+    
+  //         // Directly check and apply status updates without time updates
+  //         if ('status' in flightUpdate && !(('takeoffTime' in flightUpdate) || ('landingTime' in flightUpdate))) {
+  //           // Apply only the status update
+  //           if (flightUpdate.status !== undefined) {
+  //             this.flights[index] = { ...currentFlight, status: flightUpdate.status };
+  //           }
+            
+  //         }
+    
+  //         // Handle time updates (takeoff or landing)
+  //         if ('takeoffTime' in flightUpdate || 'landingTime' in flightUpdate) {
+  //           // Now we're sure this update is about time, not status
+  //           const isTakeoffTimeUpdated = 'takeoffTime' in flightUpdate && flightUpdate.takeoffTime !== currentFlight.takeoffTime;
+  //           const isLandingTimeUpdated = 'landingTime' in flightUpdate && flightUpdate.landingTime !== currentFlight.landingTime;
+    
+  //           if (isTakeoffTimeUpdated) {
+  //             flightUpdate.previousTakeoffTime = currentFlight.takeoffTime;
+  //             flightUpdate.takeoffDelay = this.calculateDelay(flightUpdate.takeoffTime!, currentFlight.takeoffTime);
+  //           }
+  //           if (isLandingTimeUpdated) {
+  //             flightUpdate.previousLandingTime = currentFlight.landingTime;
+  //             flightUpdate.landingDelay = this.calculateDelay(flightUpdate.landingTime!, currentFlight.landingTime);
+  //           }
+    
+  //           // Apply the time update
+  //           this.flights[index] = { ...currentFlight, ...flightUpdate };
+  //         }
+  //       } else {
+  //         // New flight logic remains unchanged
+  //         this.flights.push(flightUpdate as Flight);
+  //       }
+    
+  //       // Reapply the filter
+  //       this.filterFlights(this.currentSearchTerm);
+  //     });
+  //   });
+  // }
+
+  // async loadAllFlights() {
+  //   try {
+  //     const flights = await fetchAllFlights();
+  //     runInAction(() => {
+  //       this.flights = flights;
+  //       // Reapply the filter to the newly fetched flights
+  //       this.filterFlights(this.currentSearchTerm);
+  //     });
+  //   } catch (error) {
+  //     console.error("Could not load flights", error);
+  //   }
+  // }
+
+  async setupSocket() {
+    const socket = io('http://localhost:4963');
+    socket.on('flight-update', (flightUpdate: Partial<Flight>) => {
+      runInAction(() => {
+        const index = this.flights.findIndex(f => f.flightNumber === flightUpdate.flightNumber);
+        if (index > -1) {
+          const currentFlight = this.flights[index];
+          
+          // Directly check and apply status updates without time updates
+          if (flightUpdate.status !== undefined && flightUpdate.status !== currentFlight.status) {
+              this.flights[index] = { ...currentFlight, status: flightUpdate.status };
+          }
+          else if ('takeoffTime' in flightUpdate || 'landingTime' in flightUpdate) { // Handle time updates (takeoff or landing)
+            
+            // Calculate delay for takeoff time, if updated
+            // Assuming this code snippet is from the part where you're experiencing the error
+            if (flightUpdate.takeoffTime && flightUpdate.flightNumber && flightUpdate.takeoffTime !== currentFlight.takeoffTime) {
+              flightUpdate.previousTakeoffTime = currentFlight.takeoffTime;
+              this.calculateDelay(flightUpdate.takeoffTime, currentFlight.takeoffTime, flightUpdate.flightNumber, true);
+
+              // Safely access `takeoffDelay` with a fallback to 0 if not defined
+              const delayInfo = this.delayTimes[flightUpdate.flightNumber];
+              flightUpdate.takeoffDelay = delayInfo ? delayInfo.takeoffDelay : 0;
+              
+            }
+
+
+            // Calculate delay for landing time, if updated
+            if (flightUpdate.landingTime && flightUpdate.flightNumber && flightUpdate.landingTime !== currentFlight.landingTime) {
+              flightUpdate.previousLandingTime = currentFlight.landingTime;
+              this.calculateDelay(flightUpdate.landingTime, currentFlight.landingTime, flightUpdate.flightNumber, false);
+              // Safely access `takeoffDelay` with a fallback to 0 if not defined
+              const delayInfo = this.delayTimes[flightUpdate.flightNumber];
+              flightUpdate.landingDelay = delayInfo ? delayInfo.landingDelay : 0;
+            }
+    
+            // Apply the time update
+            this.flights[index] = { ...currentFlight, ...flightUpdate };
+          }
+        } else {
+          // If the flight is new, add it directly
+          this.flights.push(flightUpdate as Flight);
+        }
+    
+        // Reapply the filter
+        this.filterFlights(this.currentSearchTerm);
+      });
     });
-    
-    // Reapply the filter to the updated flights
-    this.filterFlights(this.currentSearchTerm);
-    
-    // Clear the buffer after processing
-    this.updateBuffer = [];
-  }
+}
+
 
   async loadAllFlights() {
     try {
@@ -160,8 +173,7 @@ class FlightStore {
               ...flight,
               previousTakeoffTime: flight.takeoffTime,
               previousLandingTime: flight.landingTime,
-              takeoffDelay: 0,
-              landingDelay: 0,
+
             }));
             this.initialLoadComplete = true; // Set the flag to true after initial load
         } else {
@@ -226,138 +238,3 @@ export const flightStore = new FlightStore();
 
 
 
-// import { makeAutoObservable, runInAction } from 'mobx';
-// import io from 'socket.io-client';
-// import { Flight } from '../types/flight';
-// import { fetchAllFlights, fetchFlightByNumber } from '../services/Api';
-// import moment from 'moment';
-
-// class FlightStore {
-//   flights: Flight[] = [];
-//   filteredFlights: Flight[] = [];
-//   currentSearchTerm: string = '';
-//   initialLoadComplete: boolean = false;
-//   updateQueue: Partial<Flight>[] = [];
-//   isProcessingQueue: boolean = false;
-
-//   constructor() {
-//     makeAutoObservable(this);
-//     this.setupSocket();
-//     this.loadAllFlights();
-//   }
-
-//   calculateDelay = (current: string, previous?: string) => {
-//     const currentTime = moment(current, "DD/MM/YYYY - HH:mm");
-//     const previousTime = moment(previous || current, "DD/MM/YYYY - HH:mm");
-//     return currentTime.diff(previousTime, 'minutes');
-//   };
-
-//   processUpdateQueue = () => {
-//     if (this.updateQueue.length === 0 || this.isProcessingQueue) {
-//       return;
-//     }
-
-//     this.isProcessingQueue = true;
-//     const flightUpdate = this.updateQueue.shift();
-
-//     if (flightUpdate) {
-//       const index = this.flights.findIndex(f => f.flightNumber === flightUpdate.flightNumber);
-//       if (index > -1) {
-//         const currentFlight = this.flights[index];
-//         if (flightUpdate.takeoffTime && flightUpdate.takeoffTime !== currentFlight.takeoffTime) {
-//           flightUpdate.previousTakeoffTime = currentFlight.takeoffTime;
-//           flightUpdate.takeoffDelay = this.calculateDelay(flightUpdate.takeoffTime, flightUpdate.previousTakeoffTime);
-//         }
-//         if (flightUpdate.landingTime && flightUpdate.landingTime !== currentFlight.landingTime) {
-//           flightUpdate.previousLandingTime = currentFlight.landingTime;
-//           flightUpdate.landingDelay = this.calculateDelay(flightUpdate.landingTime, flightUpdate.previousLandingTime);
-//         }
-//         this.flights[index] = { ...currentFlight, ...flightUpdate };
-//       } else {
-//         const newFlight: Flight = {
-//           ...flightUpdate as Flight,
-//           previousTakeoffTime: flightUpdate.takeoffTime || '',
-//           previousLandingTime: flightUpdate.landingTime || '',
-//           takeoffDelay: 0,
-//           landingDelay: 0,
-//         };
-//         this.flights.push(newFlight);
-//       }
-//       this.filterFlights(this.currentSearchTerm);
-//     }
-
-//     this.isProcessingQueue = false;
-
-//     if (this.updateQueue.length > 0) {
-//       setTimeout(this.processUpdateQueue, 0);
-//     }
-//   };
-
-//   setupSocket() {
-//     const socket = io('http://localhost:4963');
-//     socket.on('flight-update', (flightUpdate: Partial<Flight>) => {
-//       runInAction(() => {
-//         this.updateQueue.push(flightUpdate);
-//         this.processUpdateQueue();
-//       });
-//     });
-//   }
-
-//   async loadAllFlights() {
-//     try {
-//       const flights = await fetchAllFlights();
-//       runInAction(() => {
-//         if (!this.initialLoadComplete) {
-//           this.flights = flights.map(flight => ({
-//             ...flight,
-//             previousTakeoffTime: flight.takeoffTime,
-//             previousLandingTime: flight.landingTime,
-//             takeoffDelay: 0,
-//             landingDelay: 0,
-//           }));
-//           this.initialLoadComplete = true;
-//         } else {
-//           this.flights = flights;
-//         }
-//       });
-//     } catch (error) {
-//       console.error("Could not load flights", error);
-//     }
-//   }
-
-//   async loadFlightByNumber(flightNumber: string) {
-//     try {
-//       const flight = await fetchFlightByNumber(flightNumber);
-//       runInAction(() => {
-//         const index = this.flights.findIndex(f => f.flightNumber?.toLowerCase() === flight.flightNumber?.toLowerCase());
-//         if (index > -1) {
-//           this.flights[index] = flight;
-//         } else {
-//           this.flights.push(flight);
-//         }
-//       });
-//     } catch (error) {
-//       console.error(`Could not load flight ${flightNumber}`, error);
-//     }
-//   }
-
-//   async filterFlights(searchTerm: string) {
-//     this.currentSearchTerm = searchTerm;
-//     if (!searchTerm.trim()) {
-//       this.filteredFlights = this.flights;
-//     } else {
-//       const lowerCaseSearchTerm = searchTerm.toLowerCase();
-//       this.filteredFlights = this.flights.filter(flight =>
-//         flight.flightNumber?.toLowerCase().includes(lowerCaseSearchTerm) ||
-//         flight.takeoffAirport?.toLowerCase().includes(lowerCaseSearchTerm) ||
-//         flight.landingAirport?.toLowerCase().includes(lowerCaseSearchTerm)
-//       );
-//     }
-//   }
-
-//   get visibleFlights() {
-//     return this.currentSearchTerm ? this.filteredFlights : this.flights;
-//   }
-// }
-
-// export const flightStore = new FlightStore();
