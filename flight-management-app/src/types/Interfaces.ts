@@ -14,7 +14,12 @@ export interface Flight {
 }
 
 export interface DelayTimes {
-      takeoffDelay: number;
-      landingDelay: number;
-  }
+    takeoffDelay: number;
+    landingDelay: number;
+}
+
+export interface HelpDialogProps {
+    open: boolean;
+    onClose: () => void;
+}
   

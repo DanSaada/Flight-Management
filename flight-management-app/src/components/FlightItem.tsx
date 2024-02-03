@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { observer } from 'mobx-react-lite'; // Import observer from mobx-react-lite
+import { observer } from 'mobx-react-lite';
 import { Flight } from '../types/Interfaces';
 import { TableRow, TableCell, Typography, Tooltip } from '@mui/material';
 import { getFlightItemStyle, textCellStyle, getStatusStyle } from '../styles/CommonStyle';
-import { flightStore } from '../stores/FlightStore'; // Assuming this is your store
+import { flightStore } from '../stores/FlightStore';
 
 /**
  * The FlightItem component is a React functional component designed to display detailed 
@@ -16,9 +16,7 @@ const FlightItem = observer(({ flight, index }: { flight: Flight, index: number 
   const [landingDelay, setLandingDelay] = useState<number | null>(null);
 
   useEffect(() => {
-    // Check if there's an entry for the current flight in the delayTimes hashmap
     const flightDelayInfo = flightStore.delayTimes[flight.flightNumber];
-    
     // Safely access takeoffDelay, defaulting to 0 if not present
     const newTakeoffDelay = flightDelayInfo ? flightDelayInfo.takeoffDelay : 0;
     setTakeoffDelay(newTakeoffDelay);
@@ -26,15 +24,13 @@ const FlightItem = observer(({ flight, index }: { flight: Flight, index: number 
   
 
 useEffect(() => {
-  // Check if there's an entry for the current flight in the delayTimes hashmap
   const flightDelayInfo = flightStore.delayTimes[flight.flightNumber];
-  
   // Safely access landingDelay, defaulting to 0 if not present
   const newLandingDelay = flightDelayInfo ? flightDelayInfo.landingDelay : 0;
   setLandingDelay(newLandingDelay);
 }, [flight.flightNumber, flight.landingDelay]);
 
-
+  // Function to render the delayed value and '-' if there isn't one
   const renderDelayCell = (delay: number) => {
     return delay > 0 ? (
       <Tooltip title={`Delayed by ${delay} minutes`}>

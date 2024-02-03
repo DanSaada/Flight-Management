@@ -32,7 +32,7 @@ export const searchBarStyle = {
   position: 'sticky',
   top: 0,
   zIndex: 1000,
-  backgroundColor: '#9798a1', // Set your desired color
+  backgroundColor: '#9798a1',
   paddingX: '16px',
   paddingTop: '10px',
   paddingBottom: '10px',
@@ -40,7 +40,6 @@ export const searchBarStyle = {
   maxWidth: '600px',
   margin: '0 auto',
   borderRadius: '4px',
-  // Add any additional styling you need here
 };
 
 
@@ -53,7 +52,7 @@ export const flightListContainerStyle: SxProps<Theme> = {
 };
 
 export const flightListHeaderStyle: SxProps<Theme> = {
-  backgroundColor: "primary.main", // You can adjust the color to match your theme
+  backgroundColor: "primary.main",
   '& th': {
     color: 'white',
     fontWeight: 'bold',
@@ -63,7 +62,7 @@ export const flightListHeaderStyle: SxProps<Theme> = {
 };
 
 export const flightListRowStyle = (index: number): SxProps<Theme> => ({
-  backgroundColor: index % 2 === 0 ? grey[800] : grey[700], // Stripe effect for rows
+  backgroundColor: index % 2 === 0 ? grey[800] : grey[700],
 });
 
 
@@ -90,16 +89,13 @@ export const getStatusStyle = (status: string): SxProps<Theme> => (
 export const titleBoxStyle: SxProps<Theme> = {
   textAlign: 'center',
   mb: 5,
-  // Any other box styles you wish to add
 };
 
 export const mainTitleStyle: SxProps<Theme> = {
   fontWeight: 'bold',
-  // Any other main title styles you wish to add
 };
 
 export const subTitleStyle: SxProps<Theme> = {
-  // Any subtitle styles you wish to add
 };
 
 // AirPlane:
@@ -126,7 +122,4 @@ export const PlaneIconStyled = styled(FlightTakeoffIcon)({
   animation: `${moveAndTurn} 8s infinite linear`,
   color: 'black',
 });
-
-
-
 

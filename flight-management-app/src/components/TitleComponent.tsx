@@ -1,4 +1,3 @@
-// TitleComponent.js
 import React from 'react';
 import { Typography, Box } from '@mui/material';
 import { titleBoxStyle, mainTitleStyle, subTitleStyle, PlaneIconStyled } from '../styles/CommonStyle';
