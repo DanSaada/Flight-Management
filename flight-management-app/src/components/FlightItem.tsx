@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Flight } from '../types/flight';
-import { TableRow, TableCell } from '@mui/material';
+import { TableRow, TableCell, Typography } from '@mui/material';
+import { grey, red } from '@mui/material/colors';
+import { Tooltip } from '@mui/material'
 
 /**
  * The FlightItem component is a React functional component designed to display detailed 
@@ -8,22 +10,61 @@ import { TableRow, TableCell } from '@mui/material';
  * scheduled takeoff and landing times, and the airports of departure and arrival.
  */
 
-const FlightItem = ({ flight }: { flight: Flight }) => {
-  const [rowStyle, setRowStyle] = useState({});
+const FlightItem = ({ flight, index }: { flight: Flight, index: number }) => {
+  const [takeoffDelay, setTakeoffDelay] = useState<number | null>(null);
+  const [landingDelay, setLandingDelay] = useState<number | null>(null);
 
   useEffect(() => {
-    const bgColor = flight.status === 'malfunction' ? '#ffcccb' : 'inherit'; // Light red for malfunction, inherit for others
-    setRowStyle({ backgroundColor: bgColor });
-  }, [flight.status]); // Update when flight.status changes
+    // Calculate and update takeoff delay only if previous takeoff time is available
+    if (flight.previousTakeoffTime) {
+      const newTakeoffDelay = flight.takeoffDelay;
+      setTakeoffDelay(newTakeoffDelay);
+    }
+  }, [flight.takeoffDelay]);
+
+  useEffect(() => {
+    // Calculate and update landing delay only if previous landing time is available
+    if (flight.previousLandingTime) {
+      const newLandingDelay = flight.landingDelay;
+      setLandingDelay(newLandingDelay);
+    }
+  }, [flight.landingDelay]);
+  
+
+  // Function to render delay cell
+  const renderDelayCell = (delay: number) => {
+    return delay > 0 ? (
+      <Tooltip title={`Delayed by ${delay} minutes`}>
+        <span>{delay}m</span>
+      </Tooltip>
+    ) : (
+      '-'
+    );
+  };
+
+
+  // Define the row style based on the index for striped effect
+  const rowStyle = {
+    color: 'white',
+    backgroundColor: index % 2 ? grey[900] : grey[800],
+     // Set text color to white for all cells
+    '&:hover': {
+      backgroundColor: grey[700], // or any other color for hover state
+    },
+  };
+  const text = {color: 'white', textAlign: 'center',};
+  const statusStyle = flight.status === 'malfunction' ? { color: red[500] } : {color: 'white'};
 
   return (
-    <TableRow style={rowStyle} sx={{ height: '60px' }}>
-      <TableCell align="center">{flight.flightNumber}</TableCell>
-      <TableCell align="center">{flight.status}</TableCell>
-      <TableCell align="center">{flight.takeoffTime}</TableCell>
-      <TableCell align="center">{flight.landingTime}</TableCell>
-      <TableCell align="center">{flight.takeoffAirport}</TableCell>
-      <TableCell align="center">{flight.landingAirport}</TableCell>
+    <TableRow sx={rowStyle}>
+      <TableCell sx={text}><Typography>{flight.flightNumber}</Typography></TableCell>
+      <TableCell align="center" sx={statusStyle}>{flight.status}</TableCell>
+      <TableCell sx={text}>{flight.takeoffTime}</TableCell>
+      <TableCell sx={text}>{renderDelayCell(takeoffDelay ? takeoffDelay : 0)}</TableCell>
+      <TableCell sx={text}>{flight.landingTime}</TableCell>
+      <TableCell sx={text}>{renderDelayCell(landingDelay ? landingDelay : 0)}</TableCell>
+      <TableCell sx={text}>{flight.takeoffAirport}</TableCell>
+      <TableCell sx={text}>{flight.landingAirport}</TableCell>
     </TableRow>
   );
 };
