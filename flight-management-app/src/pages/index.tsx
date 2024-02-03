@@ -12,7 +12,12 @@ const Home = observer(() => {
       <Head>
         <title>Flight Management</title>
       </Head>
-      <main className="flex min-h-screen flex-col items-center justify-center p-4">
+      <main
+        className="flex min-h-screen flex-col items-center justify-center p-4"
+        style={{
+          backgroundColor: '#9798a1',
+        }}
+      >
         <TitleComponent />
         <SearchBar />
         <FlightList />

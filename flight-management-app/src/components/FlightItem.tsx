@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Flight } from '../types/flight';
-import { TableRow, TableCell, Typography } from '@mui/material';
-import { grey, red } from '@mui/material/colors';
-import { Tooltip } from '@mui/material'
+import { TableRow, TableCell, Typography, Tooltip } from '@mui/material';
+import { getFlightItemStyle, textCellStyle, getStatusStyle } from '../styles/CommonStyle';
 
 /**
  * The FlightItem component is a React functional component designed to display detailed 
@@ -42,18 +41,9 @@ const FlightItem = ({ flight, index }: { flight: Flight, index: number }) => {
     );
   };
 
-
-  // Define the row style based on the index for striped effect
-  const rowStyle = {
-    color: 'white',
-    backgroundColor: index % 2 ? grey[900] : grey[800],
-     // Set text color to white for all cells
-    '&:hover': {
-      backgroundColor: grey[700], // or any other color for hover state
-    },
-  };
-  const text = {color: 'white', textAlign: 'center',};
-  const statusStyle = flight.status === 'malfunction' ? { color: red[500] } : {color: 'white'};
+  const rowStyle = getFlightItemStyle(index);
+  const text = textCellStyle;
+  const statusStyle = getStatusStyle(flight.status);
 
   return (
     <TableRow sx={rowStyle}>

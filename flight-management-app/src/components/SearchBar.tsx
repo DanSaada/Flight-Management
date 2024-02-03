@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { flightStore } from '../stores/FlightStore';
-import { TextField, Box } from '@mui/material';
-import commonStyles from '../styles/CommonStyle';
+import { TextField, Box, ThemeProvider } from '@mui/material';
+import { searchBarStyle, searchBarTheme } from '../styles/CommonStyle';
 
 /**
  * The SearchBar component is responsible for rendering a search input field. 
@@ -10,29 +10,31 @@ import commonStyles from '../styles/CommonStyle';
  */
 
 const SearchBar = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-    flightStore.filterFlights(event.target.value);
+    const [searchTerm, setSearchTerm] = useState('');
+  
+    const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchTerm(event.target.value);
+      flightStore.filterFlights(event.target.value);
+    };
+  
+    return (
+      <ThemeProvider theme={searchBarTheme}>
+        <Box sx={searchBarStyle}>
+          <TextField
+            type="text"
+            placeholder="Search flights..."
+            value={searchTerm}
+            onChange={handleSearch}
+            fullWidth
+            label="Search Flights"
+            variant="outlined"
+            sx={{
+              maxWidth: '100%',
+            }}
+          />
+        </Box>
+      </ThemeProvider>
+    );
   };
-
-  return (
-    <Box sx={commonStyles.stickySearchBar}>
-      <TextField
-        type="text"
-        placeholder="Search flights..."
-        value={searchTerm}
-        onChange={handleSearch}
-        fullWidth
-        label="Search Flights"
-        variant="outlined"
-        sx={{
-          maxWidth: '100%', // Ensure TextField does not exceed the Box width
-        }}
-      />
-    </Box>
-  );
-};
-
-export default SearchBar;
+  
+  export default SearchBar;
