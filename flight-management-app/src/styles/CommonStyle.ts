@@ -1,6 +1,8 @@
 import { createTheme } from '@mui/material/styles';
 import { grey, red } from '@mui/material/colors';
 import { SxProps, Theme } from '@mui/system';
+import { styled, keyframes } from '@mui/material';
+import FlightTakeoffIcon from '@mui/icons-material/FlightTakeoff';
 
 
 //SearchBar:
@@ -99,4 +101,32 @@ export const mainTitleStyle: SxProps<Theme> = {
 export const subTitleStyle: SxProps<Theme> = {
   // Any subtitle styles you wish to add
 };
+
+// AirPlane:
+export const moveAndTurn = keyframes`
+  0% {
+    transform: translateX(0) rotateY(0);
+  }
+  50% {
+    transform: translateX(550px) rotateY(0);
+  }
+  50.1% {
+    transform: translateX(550px) rotateY(180deg);
+  }
+  100% {
+    transform: translateX(0) rotateY(180deg);
+  }
+`;
+
+export const PlaneIconStyled = styled(FlightTakeoffIcon)({
+  position: 'absolute',
+  top: '153px',
+  left: '35%',
+  transform: 'translate(-50%, -50%)',
+  animation: `${moveAndTurn} 8s infinite linear`,
+  color: 'black',
+});
+
+
+
 

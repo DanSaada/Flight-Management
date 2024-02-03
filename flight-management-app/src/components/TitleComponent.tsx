@@ -1,6 +1,7 @@
+// TitleComponent.js
 import React from 'react';
 import { Typography, Box } from '@mui/material';
-import { titleBoxStyle, mainTitleStyle, subTitleStyle } from '../styles/CommonStyle';
+import { titleBoxStyle, mainTitleStyle, subTitleStyle, PlaneIconStyled } from '../styles/CommonStyle';
 
 const TitleComponent = () => {
   return (
@@ -11,6 +12,9 @@ const TitleComponent = () => {
       <Typography variant="h5" color="black" sx={subTitleStyle}>
         Elevate your journey with real-time flight insights
       </Typography>
+      <div className="moving-plane">
+        <PlaneIconStyled />
+      </div>
     </Box>
   );
 };
