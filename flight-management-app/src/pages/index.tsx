@@ -11,6 +11,7 @@ const Home = observer(() => {
     <>
       <Head>
         <title>Flight Management</title>
+        <link rel="icon" href="../app/airplain-logo.ico" />
       </Head>
       <main
         className="flex min-h-screen flex-col items-center justify-center p-4"

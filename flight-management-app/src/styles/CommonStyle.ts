@@ -104,10 +104,10 @@ export const moveAndTurn = keyframes`
     transform: translateX(0) rotateY(0);
   }
   50% {
-    transform: translateX(550px) rotateY(0);
+    transform: translateX(485px) rotateY(0);
   }
   50.1% {
-    transform: translateX(550px) rotateY(180deg);
+    transform: translateX(485px) rotateY(180deg);
   }
   100% {
     transform: translateX(0) rotateY(180deg);
@@ -115,9 +115,9 @@ export const moveAndTurn = keyframes`
 `;
 
 export const PlaneIconStyled = styled(FlightTakeoffIcon)({
+  // Remove the top property and adjust the left property to center the icon horizontally.
   position: 'absolute',
-  top: '153px',
-  left: '35%',
+  left: '50%',
   transform: 'translate(-50%, -50%)',
   animation: `${moveAndTurn} 8s infinite linear`,
   color: 'black',

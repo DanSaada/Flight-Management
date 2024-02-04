@@ -8,12 +8,14 @@ const TitleComponent = () => {
       <Typography variant="h2" component="h1" gutterBottom color="primary.main" sx={mainTitleStyle}>
         The Flight Management
       </Typography>
-      <Typography variant="h5" color="black" sx={subTitleStyle}>
-        Elevate your journey with real-time flight insights
-      </Typography>
-      <div className="moving-plane">
-        <PlaneIconStyled />
-      </div>
+      <Box sx={{ position: 'relative', ...subTitleStyle }}>
+        <Typography variant="h5" color="black">
+          Elevate your journey with real-time flight insights
+        </Typography>
+        <Box className="moving-plane" sx={{ position: 'absolute', top: '50px', left: '8%', transform: 'translateX(-50%)' }}>
+          <PlaneIconStyled />
+        </Box>
+      </Box>
     </Box>
   );
 };
