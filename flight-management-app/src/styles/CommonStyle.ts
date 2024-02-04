@@ -49,7 +49,15 @@ export const flightListContainerStyle: SxProps<Theme> = {
   mx: 'auto',
   mt: 2,
   background: 'black',
+  position: 'relative',
+  borderRadius: '8px',
+  boxShadow: '0 0 10px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.5)',
+  border: '2px solid #ddd',
+  '&:before': {
+    boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.5)',
+  }
 };
+
 
 export const flightListHeaderStyle: SxProps<Theme> = {
   backgroundColor: "primary.main",
@@ -103,9 +111,18 @@ export const titleBoxStyle: SxProps<Theme> = {
 
 export const mainTitleStyle: SxProps<Theme> = {
   fontWeight: 'bold',
+  color: 'primary.main',
+  textShadow: `
+    -1px -1px 0 #fff,  
+     1px -1px 0 #fff,
+    -1px  1px 0 #fff,
+     -1px  1px 0 #fff;
+  `,
 };
 
+
 export const subTitleStyle: SxProps<Theme> = {
+  fontWeight: 'bold',
   '@media (max-width: 412px)': {
     mb: 2,
     
