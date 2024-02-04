@@ -89,14 +89,32 @@ export const getStatusStyle = (status: string): SxProps<Theme> => (
 export const titleBoxStyle: SxProps<Theme> = {
   textAlign: 'center',
   mb: 5,
+  '@media (max-width: 412px)': {
+    mb: 2,
+    '& h1': {
+      fontSize: '1.75rem',
+    },
+    '& h5': {
+      fontSize: '1.25rem',
+    },
+  },
 };
+
 
 export const mainTitleStyle: SxProps<Theme> = {
   fontWeight: 'bold',
 };
 
 export const subTitleStyle: SxProps<Theme> = {
+  '@media (max-width: 412px)': {
+    mb: 2,
+    
+    '& h5': {
+      fontSize: '1rem',
+    },
+  },
 };
+
 
 // AirPlane:
 export const moveAndTurn = keyframes`
@@ -114,11 +132,35 @@ export const moveAndTurn = keyframes`
   }
 `;
 
+export const moveAndTurnSm = keyframes`
+  0% {
+    transform: translateX(0) rotateY(0);
+  }
+  50% {
+    transform: translateX(260px) rotateY(0);
+  }
+  50.1% {
+    transform: translateX(260px) rotateY(180deg);
+  }
+  100% {
+    transform: translateX(0) rotateY(180deg);
+  }
+`;
+
 export const PlaneIconStyled = styled(FlightTakeoffIcon)({
   position: 'absolute',
-  left: '50%',
+  top: '0px',
+  left: '35%',
   transform: 'translate(-50%, -50%)',
   animation: `${moveAndTurn} 8s infinite linear`,
   color: 'black',
+  // Custom media query for screens up to 412px wide
+  '@media (max-width: 412px)': {
+    top: 'calc(100% + -20px)',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    animation: `${moveAndTurnSm} 4s infinite linear`,
+  },
 });
+
 
