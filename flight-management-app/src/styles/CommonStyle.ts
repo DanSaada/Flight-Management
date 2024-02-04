@@ -115,7 +115,6 @@ export const moveAndTurn = keyframes`
 `;
 
 export const PlaneIconStyled = styled(FlightTakeoffIcon)({
-  // Remove the top property and adjust the left property to center the icon horizontally.
   position: 'absolute',
   left: '50%',
   transform: 'translate(-50%, -50%)',
