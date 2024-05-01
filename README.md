@@ -25,8 +25,7 @@ From your command line:
 # Clone this repository.
 $ git clone https://github.com/DanSaada/Flight-Management.git
 
-# For running the Server - go into this project and follow instructions.
-# https://github.com/DavidKubiyax/flight-management-server/tree/main
+# For running the Server - go into the Server Folder and follow instructions.
 
 # For running the Client - go into the repository.
 $ cd Flight-Management
